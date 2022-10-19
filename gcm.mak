@@ -23,7 +23,7 @@ clear:
 
 
 # EOF
-
+# https://tex2e.github.io/blog/makefile/automatic-variables
 # $?, $%, $@, $*, $+, $<, $^
 # $? 
 # $%
