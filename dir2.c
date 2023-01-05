@@ -6,9 +6,10 @@ int main() {
 
   for (i = 0; i < 8; ++i) {
     tmp = dx;
-    dx += dy;
+    dx -= dy;
     dy += tmp;
     dx = ADJ(dx);
     dy = ADJ(dy);
+    printf("%3d,%3d\n", dx, dy);
   }
 }
