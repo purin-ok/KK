@@ -112,14 +112,11 @@ int othello_game(char map[8][8], int* player) {  // ターン一回分
            ((j > 0) && (j < 8) && (k > 0) && (k < 8)); j += dy, k += dx,
           count++) {  // 盤面内なら動作する．各方向にみょ～んって伸ばしていく．
         if (*player * map[j][k] == 0) {
-          printf("コマなし\n");
           break;  // コマがなければこれ以降比較の意味はなし．
         }
         if (((*player * map[j][k]) > 0)) {  // もし自分のコマを見つけた時
-          printf("%d,%d\n", k, j);
           if (((ABS(k - x_in) + ABS(j - y_in)) / (ABS(dy) + ABS(dx))) > 1) {
             // (|x|+|y|)/(|dx|+|dy|)>=2ならヨシひっくり返そう！
-            printf("ひっくり返す\n");
             // ひっくり返す処理が入る．
             turn_over(map, dx, dy, x_in, y_in, count);
             map[y_in][x_in] = *player;
