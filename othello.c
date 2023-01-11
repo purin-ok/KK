@@ -9,15 +9,18 @@
 
 int read_map_file(const char*, char map[8][8]);
 // リターン値(1:読み込み失敗, 0:読み込み成功)
-int map_reset(char map[8][8]);           // マップ状態を初期化
-int map_save(char map[8][8]);            // マップ状態を保存
-int othello_game(char map[8][8], int*);  // ゲームほんへ
+int map_reset(char map[8][8]);  // マップ状態を初期化
+int map_save(char map[8][8]);   // マップ状態を保存
+int othello_game(char map[8][8], double pmap[8][8], int*);  // ゲームほんへ
 void turn_over(char map[8][8], int, int, int, int, int);  // コマをひっくり返す
-void board_display(char map[8][8], int);
+void board_display(char map[8][8]);                       // マップ表示
+int put_search(char map[8][8], double pmap[8][8], int);  // おける枚数保存
 
 int main(int argc, char** argv) {
-  int i = 0, turn_flag = -1;  // -1が先行
+  int tmp = 0;
+  int i = 0, turn_flag = 1, finish_flag = 0;  // -1が先行,最初に-1をかける．
   char map[8][8];
+  double pmap[8][8] = {0.0};
   if (read_map_file(argv[1], map)) {  // 盤面読み込み
     printf("ファイルが読み込めません");
     return EXIT_FAILURE;
@@ -25,14 +28,25 @@ int main(int argc, char** argv) {
 
   do {
     // １ターン分の流れを他の関数に渡してそれを繰り返す形にする．条件式で呼び出せば流石に行けるはず．
-    i++;
     // system("cls");
     // printf("turn%d\n", i);
+    turn_flag *= -1;
 
-    board_display(map, i);
-  } while (othello_game(map, &turn_flag) == 0);
+    // おける場所サーチする関数作って置ける場所なかったらcontinueでどうだろう
+    if (put_search(map, pmap, turn_flag) == 0) {  // おけなかったら
+      if (finish_flag) break;  // フラグが立ってたらおわり
+      finish_flag++;  // 立ってなかったらこのループ最初から
+      printf("パスです\n");
+      continue;
+      // return 0;
+    }
+    finish_flag = 0;  // おけそうならフラグ折ります．
+    tmp = 1;
+    // uuu
+    board_display(map);
+  } while (othello_game(map, pmap, &turn_flag) == 0);  // 値だけでいい
   // 成功したら0を返す．失敗で1とか返したい．
-  printf("hehe");
+  printf("finish");
   return 0;
 }
 
@@ -75,15 +89,16 @@ int map_save(char map[8][8]) {
   fprintf(fp, "8, 8\n");
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 7; j++) {  // 途中まで"値, "を出力
-      fprintf(fp, "%c, ", map[i][j]);
+      fprintf(fp, "%d, ", map[i][j]);
     }
-    fprintf(fp, "%c\n", map[i][8]);  // 最後の行にはカンマではなく改行を出力
+    fprintf(fp, "%d\n", map[i][7]);  // 最後の行にはカンマではなく改行を出力
   }
   fclose(fp);
   return 0;
 }
 
-int othello_game(char map[8][8], int* player) {  // ターン一回分
+int othello_game(char map[8][8], double pmap[8][8],
+                 int* player) {  // ターン一回分
   char buf[81];
   char* tmp;
   int x_in, y_in;
@@ -96,11 +111,17 @@ int othello_game(char map[8][8], int* player) {  // ターン一回分
   x_in = *tmp - (int)'a';
   // 文字コード97が小文字のaだから，こう書けば入力がaの時x_inは0になる．
   y_in = atoi(strtok(NULL, "\0"));
+  if (pmap[y_in][x_in] == 0) {
+    printf("置けません");
+    Sleep(1000);
+    *player *= -1;
+    return 0;
+  }
   if ((x_in > 8) && (x_in < 0) && (y_in > 8) && (y_in < 0)) {
     printf("入力する値がおかしい\n");
     return EXIT_FAILURE;
   }
-  printf("%d,%d", x_in, y_in);
+  // printf("%d,%d", x_in, y_in);
   if (map[y_in][x_in] == 0)  // コマがおいてなければ
     for (i = 0; i < 8; ++i) {  // すべての方向に敵のコマがないか確認する.
       tmp_int = dx;
@@ -121,7 +142,7 @@ int othello_game(char map[8][8], int* player) {  // ターン一回分
             turn_over(map, dx, dy, x_in, y_in, count);
             map[y_in][x_in] = *player;
             // 方向の座標，コマ置く座標，自分の駒までに何回ループしたか
-            printf("%d", map[y_in + dy][x_in + dx]);
+            // printf("%d", map[y_in + dy][x_in + dx]);
           } else {
             // そうじゃなければ次ループへ
             break;
@@ -130,18 +151,19 @@ int othello_game(char map[8][8], int* player) {  // ターン一回分
       }
     }  // 8方向に対して見終わる
   // board_display(map, 1);
-  return 1;
+  map_save(map);
+  return 0;
 }
 
 void turn_over(char map[8][8], int dx, int dy, int x_in, int y_in, int count) {
   int i, j;
   for (i = count; i > 0; i--) {
-    map[y_in + dy * count][x_in + dx * count] *= -1;
+    map[y_in + dy * i][x_in + dx * i] *= -1;
   }
   return;
 }
 
-void board_display(char map[8][8], int count) {
+void board_display(char map[8][8]) {
   HANDLE hStdOut;
   COORD position;
   DWORD numWritten;
@@ -199,6 +221,48 @@ void board_display(char map[8][8], int count) {
   }
   color = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
   SetConsoleTextAttribute(hStdOut, color);
-  printf("turn%d\n", count);
   return;
+}
+
+int put_search(char map[8][8], double pmap[8][8], int player) {
+  // printf("a");
+  char* tmp;
+  int x_in, y_in;
+  int dx = 1, dy = -1, tmp_int, i, j, k, count, put_possible = 0;
+  for (y_in = 0; y_in < 8; y_in++) {
+    for (x_in = 0; x_in < 8; x_in++) {
+      if (map[y_in][x_in] == 0)  // コマがおいてなければ
+        for (i = 0; i < 8; ++i) {  // すべての方向に敵のコマがないか確認する.
+          tmp_int = dx;
+          dx -= dy;
+          dy += tmp_int;
+          dx = ADJ(dx);
+          dy = ADJ(dy);
+          for (
+              j = y_in + dy, k = x_in + dx, count = 0;  // 周りにあるのはなにか
+              ((j > 0) && (j < 8) && (k > 0) && (k < 8)); j += dy, k += dx,
+             count++) {  // 盤面内なら動作する．各方向にみょ～んって伸ばしていく．
+            if (player * map[j][k] == 0) {
+              break;  // コマがなければこれ以降比較の意味はなし．
+            }
+            if (((player * map[j][k]) > 0)) {  // もし自分のコマを見つけた時
+              if (((ABS(k - x_in) + ABS(j - y_in)) / (ABS(dy) + ABS(dx))) > 1) {
+                // (|x|+|y|)/(|dx|+|dy|)>=2ならヨシひっくり返そう！
+                // ひっくり返す処理が入る．
+                // turn_over(map, dx, dy, x_in, y_in, count);
+                pmap[y_in][x_in] += ((ABS(k - x_in) + ABS(j - y_in)) /
+                                     (ABS(dy) + ABS(dx)));  // おける方向の合計
+                put_possible++;
+                // 方向の座標，コマ置く座標，自分の駒までに何回ループしたか
+                printf("%d,%d,%d\n", put_possible, x_in, y_in);
+              } else {
+                // そうじゃなければ次ループへ
+                break;
+              }
+            }
+          }
+        }  // 8方向に対して見終わる
+    }
+  }
+  return put_possible;  //
 }
