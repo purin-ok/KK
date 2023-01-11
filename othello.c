@@ -9,14 +9,14 @@
 
 int read_map_file(const char*, char map[8][8]);
 // リターン値(1:読み込み失敗, 0:読み込み成功)
-int map_reset(char map[8][8]);          // マップ状態を初期化
-int map_save(char map[8][8]);           // マップ状態を保存
-int othello_game(char map[8][8], int);  // ゲームほんへ
+int map_reset(char map[8][8]);           // マップ状態を初期化
+int map_save(char map[8][8]);            // マップ状態を保存
+int othello_game(char map[8][8], int*);  // ゲームほんへ
 void turn_over(char map[8][8], int, int, int, int, int);  // コマをひっくり返す
-void board_display(char map[8][8]);
+void board_display(char map[8][8], int);
 
 int main(int argc, char** argv) {
-  int i = 0, turn_flag = 1;  // 1が先行
+  int i = 0, turn_flag = -1;  // -1が先行
   char map[8][8];
   if (read_map_file(argv[1], map)) {  // 盤面読み込み
     printf("ファイルが読み込めません");
@@ -26,11 +26,11 @@ int main(int argc, char** argv) {
   do {
     // １ターン分の流れを他の関数に渡してそれを繰り返す形にする．条件式で呼び出せば流石に行けるはず．
     i++;
-    system("cls");
-    printf("turn%d\n", i);
+    // system("cls");
+    // printf("turn%d\n", i);
 
-    board_display(map);
-  } while (othello_game(map, turn_flag) == 0);
+    board_display(map, i);
+  } while (othello_game(map, &turn_flag) == 0);
   // 成功したら0を返す．失敗で1とか返したい．
   printf("hehe");
   return 0;
@@ -83,7 +83,7 @@ int map_save(char map[8][8]) {
   return 0;
 }
 
-int othello_game(char map[8][8], int player) {  // ターン一回分
+int othello_game(char map[8][8], int* player) {  // ターン一回分
   char buf[81];
   char* tmp;
   int x_in, y_in;
@@ -100,6 +100,7 @@ int othello_game(char map[8][8], int player) {  // ターン一回分
     printf("入力する値がおかしい\n");
     return EXIT_FAILURE;
   }
+  printf("%d,%d", x_in, y_in);
   if (map[y_in][x_in] == 0)  // コマがおいてなければ
     for (i = 0; i < 8; ++i) {  // すべての方向に敵のコマがないか確認する.
       tmp_int = dx;
@@ -110,23 +111,29 @@ int othello_game(char map[8][8], int player) {  // ターン一回分
       for (j = y_in + dy, k = x_in + dx, count = 0;  // 周りにあるのはなにか
            ((j > 0) && (j < 8) && (k > 0) && (k < 8)); j += dy, k += dx,
           count++) {  // 盤面内なら動作する．各方向にみょ～んって伸ばしていく．
-        if (player * map[y_in][x_in] == 0)
+        if (*player * map[j][k] == 0) {
+          printf("コマなし\n");
           break;  // コマがなければこれ以降比較の意味はなし．
-        if (((player * map[y_in][x_in]) > 0))  // もし自分のコマを見つけた時
+        }
+        if (((*player * map[j][k]) > 0)) {  // もし自分のコマを見つけた時
+          printf("%d,%d\n", k, j);
           if (((ABS(k - x_in) + ABS(j - y_in)) / (ABS(dy) + ABS(dx))) > 1) {
             // (|x|+|y|)/(|dx|+|dy|)>=2ならヨシひっくり返そう！
+            printf("ひっくり返す\n");
             // ひっくり返す処理が入る．
             turn_over(map, dx, dy, x_in, y_in, count);
-            map[y_in][x_in] = player;
+            map[y_in][x_in] = *player;
             // 方向の座標，コマ置く座標，自分の駒までに何回ループしたか
+            printf("%d", map[y_in + dy][x_in + dx]);
           } else {
             // そうじゃなければ次ループへ
             break;
           }
+        }
       }
     }  // 8方向に対して見終わる
-  // board_display(map);
-  return 0;
+  // board_display(map, 1);
+  return 1;
 }
 
 void turn_over(char map[8][8], int dx, int dy, int x_in, int y_in, int count) {
@@ -137,17 +144,19 @@ void turn_over(char map[8][8], int dx, int dy, int x_in, int y_in, int count) {
   return;
 }
 
-void board_display(char map[8][8]) {
+void board_display(char map[8][8], int count) {
   HANDLE hStdOut;
   COORD position;
   DWORD numWritten;
   WORD color;
 
-  // system("cls");
+  system("cls");
 
   hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
   SetConsoleTextAttribute(hStdOut, BACKGROUND_GREEN);
   printf("   a  b  c  d  e  f  g  h \n");
+  printf(" -------------------------\n");
+  printf("0|●|●|●|●|●|●|●|●|\n");
   printf(" -------------------------\n");
   printf("1|●|●|●|●|●|●|●|●|\n");
   printf(" -------------------------\n");
@@ -163,8 +172,7 @@ void board_display(char map[8][8]) {
   printf(" -------------------------\n");
   printf("7|●|●|●|●|●|●|●|●|\n");
   printf(" -------------------------\n");
-  printf("8|●|●|●|●|●|●|●|●|\n");
-  printf(" -------------------------\n");
+
   color =
       FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | BACKGROUND_GREEN;
   // position.X = 10;
@@ -194,5 +202,6 @@ void board_display(char map[8][8]) {
   }
   color = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
   SetConsoleTextAttribute(hStdOut, color);
+  printf("turn%d\n", count);
   return;
 }
