@@ -12,7 +12,7 @@ int read_map_file(const char*, char map[8][8]);
 int map_reset(char map[8][8]);          // マップ状態を初期化
 int map_save(char map[8][8]);           // マップ状態を保存
 int othello_game(char map[8][8], int);  // ゲームほんへ
-void turn_over();                       // コマをひっくり返す
+void turn_over(char map[8][8], int, int, int, int, int);  // コマをひっくり返す
 void board_display(char map[8][8]);
 
 int main(int argc, char** argv) {
@@ -26,10 +26,14 @@ int main(int argc, char** argv) {
   do {
     // １ターン分の流れを他の関数に渡してそれを繰り返す形にする．条件式で呼び出せば流石に行けるはず．
     i++;
+    system("cls");
     printf("turn%d\n", i);
+
     board_display(map);
   } while (othello_game(map, turn_flag) == 0);
-  //成功したら0を返す．失敗で1とか返したい．
+  // 成功したら0を返す．失敗で1とか返したい．
+  printf("hehe");
+  return 0;
 }
 
 int read_map_file(const char* fname, /*ファイル名*/
@@ -70,30 +74,32 @@ int map_save(char map[8][8]) {
     return 1;  // 内容消し飛ばして書き込み
   fprintf(fp, "8, 8\n");
   for (int i = 0; i < 8; i++) {
-    for (int j = 0; j < 7; j++) {
+    for (int j = 0; j < 7; j++) {  // 途中まで"値, "を出力
       fprintf(fp, "%c, ", map[i][j]);
     }
-    fprintf(fp, "%c\n", map[i][8]);
+    fprintf(fp, "%c\n", map[i][8]);  // 最後の行にはカンマではなく改行を出力
   }
   fclose(fp);
   return 0;
 }
 
-int othello_game(char map[8][8], int player) {
+int othello_game(char map[8][8], int player) {  // ターン一回分
   char buf[81];
   char* tmp;
   int x_in, y_in;
   int dx = 1, dy = -1, tmp_int, i, j, k, count;
-  do {
-    printf(
-        "座標を入力してください．横軸をaからhのアルファベットで表します．例:a,"
-        "0\n");
-    fgets(buf, sizeof(buf), stdin);
-  } while (buf[3] != '\0');  // h,1の形で入力する．
-  tmp = strtok(buf, ",");    // 文字コードが欲しい
+  printf(
+      "座標を入力してください．横軸をaからhのアルファベットで表します．例:a,"
+      "0\n");
+  fgets(buf, sizeof(buf), stdin);
+  tmp = strtok(buf, ",");  // 文字コードが欲しい
   x_in = *tmp - (int)'a';
   // 文字コード97が小文字のaだから，こう書けば入力がaの時x_inは0になる．
   y_in = atoi(strtok(NULL, "\0"));
+  if ((x_in > 8) && (x_in < 0) && (y_in > 8) && (y_in < 0)) {
+    printf("入力する値がおかしい\n");
+    return EXIT_FAILURE;
+  }
   if (map[y_in][x_in] == 0)  // コマがおいてなければ
     for (i = 0; i < 8; ++i) {  // すべての方向に敵のコマがないか確認する.
       tmp_int = dx;
@@ -118,12 +124,12 @@ int othello_game(char map[8][8], int player) {
             break;
           }
       }
-    }
-
+    }  // 8方向に対して見終わる
+  // board_display(map);
   return 0;
 }
 
-void turn_over(int map[8][8], int dx, int dy, int x_in, int y_in, int count) {
+void turn_over(char map[8][8], int dx, int dy, int x_in, int y_in, int count) {
   int i, j;
   for (i = count; i > 0; i--) {
     map[y_in + dy * count][x_in + dx * count] *= -1;
@@ -137,26 +143,28 @@ void board_display(char map[8][8]) {
   DWORD numWritten;
   WORD color;
 
-  system("cls");
+  // system("cls");
+
   hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
   SetConsoleTextAttribute(hStdOut, BACKGROUND_GREEN);
-  printf("-------------------------\n");
-  printf("|●|●|●|●|●|●|●|●|\n");
-  printf("-------------------------\n");
-  printf("|●|●|●|●|●|●|●|●|\n");
-  printf("-------------------------\n");
-  printf("|●|●|●|●|●|●|●|●|\n");
-  printf("-------------------------\n");
-  printf("|●|●|●|●|●|●|●|●|\n");
-  printf("-------------------------\n");
-  printf("|●|●|●|●|●|●|●|●|\n");
-  printf("-------------------------\n");
-  printf("|●|●|●|●|●|●|●|●|\n");
-  printf("-------------------------\n");
-  printf("|●|●|●|●|●|●|●|●|\n");
-  printf("-------------------------\n");
-  printf("|●|●|●|●|●|●|●|●|\n");
-  printf("-------------------------\n");
+  printf("   a  b  c  d  e  f  g  h \n");
+  printf(" -------------------------\n");
+  printf("1|●|●|●|●|●|●|●|●|\n");
+  printf(" -------------------------\n");
+  printf("2|●|●|●|●|●|●|●|●|\n");
+  printf(" -------------------------\n");
+  printf("3|●|●|●|●|●|●|●|●|\n");
+  printf(" -------------------------\n");
+  printf("4|●|●|●|●|●|●|●|●|\n");
+  printf(" -------------------------\n");
+  printf("5|●|●|●|●|●|●|●|●|\n");
+  printf(" -------------------------\n");
+  printf("6|●|●|●|●|●|●|●|●|\n");
+  printf(" -------------------------\n");
+  printf("7|●|●|●|●|●|●|●|●|\n");
+  printf(" -------------------------\n");
+  printf("8|●|●|●|●|●|●|●|●|\n");
+  printf(" -------------------------\n");
   color =
       FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | BACKGROUND_GREEN;
   // position.X = 10;
@@ -164,9 +172,24 @@ void board_display(char map[8][8]) {
   // FillConsoleOutputAttribute(hStdOut, color, 2, position, &numWritten);
   for (int y = 0; y < 8; y++) {
     for (int x = 0; x < 8; x++) {
-      // position.X = x;
-      // position.Y = y;
-      // FillConsoleOutputAttribute(hStdOut, color, 2, position, &numWritten);
+      position.X = x * 3 + 2;
+      position.Y = y * 2 + 2;
+      if (map[y][x] == 0) {  // 緑着色
+        color = FOREGROUND_GREEN | BACKGROUND_GREEN;
+        FillConsoleOutputAttribute(hStdOut, color, 2, position, &numWritten);
+
+      } else if (map[y][x] == -1) {  // 黒着色
+        color = BACKGROUND_GREEN;
+        FillConsoleOutputAttribute(hStdOut, color, 2, position, &numWritten);
+
+      } else if (map[y][x] == 1) {  // 白着色
+        color = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED |
+                BACKGROUND_GREEN;
+        FillConsoleOutputAttribute(hStdOut, color, 2, position, &numWritten);
+      } else {  // 値がおかしい場合赤着色
+        color = FOREGROUND_RED | BACKGROUND_GREEN;
+        FillConsoleOutputAttribute(hStdOut, color, 2, position, &numWritten);
+      }
     }
   }
   color = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
