@@ -12,7 +12,7 @@ int read_map_file(const char*, char map[8][8]);
 int map_reset(char map[8][8]);  // マップ状態を初期化
 int map_save(char map[8][8]);   // マップ状態を保存
 int othello_game(char map[8][8], double pmap[8][8], int*);  // ゲームほんへ
-void turn_over(char map[8][8], int, int, int, int, int);  // コマをひっくり返す
+void turn_over(char map[8][8], int, int, int, int, int,int);  // コマをひっくり返す
 void board_display(char map[8][8]);                       // マップ表示
 int put_search(char map[8][8], double pmap[8][8], int);  // おける枚数保存
 
@@ -25,7 +25,11 @@ int main(int argc, char** argv) {
     printf("ファイルが読み込めません");
     return EXIT_FAILURE;
   }
-
+if(atoi(argv[1])==0){
+  map_reset(map);
+  printf("初期盤面にしました。");
+  return 0;
+}
   do {
     // １ターン分の流れを他の関数に渡してそれを繰り返す形にする．条件式で呼び出せば流石に行けるはず．
     // system("cls");
@@ -37,6 +41,7 @@ int main(int argc, char** argv) {
       if (finish_flag) break;  // フラグが立ってたらおわり
       finish_flag++;  // 立ってなかったらこのループ最初から
       printf("パスです\n");
+      Sleep(1000);
       continue;
       // return 0;
     }
@@ -139,7 +144,7 @@ int othello_game(char map[8][8], double pmap[8][8],
           if (((ABS(k - x_in) + ABS(j - y_in)) / (ABS(dy) + ABS(dx))) > 1) {
             // (|x|+|y|)/(|dx|+|dy|)>=2ならヨシひっくり返そう！
             // ひっくり返す処理が入る．
-            turn_over(map, dx, dy, x_in, y_in, count);
+            turn_over(map, dx, dy, x_in, y_in, count,*player);
             map[y_in][x_in] = *player;
             // 方向の座標，コマ置く座標，自分の駒までに何回ループしたか
             // printf("%d", map[y_in + dy][x_in + dx]);
@@ -155,9 +160,10 @@ int othello_game(char map[8][8], double pmap[8][8],
   return 0;
 }
 
-void turn_over(char map[8][8], int dx, int dy, int x_in, int y_in, int count) {
+void turn_over(char map[8][8], int dx, int dy, int x_in, int y_in, int count, int player) {
   int i, j;
-  for (i = count; i > 0; i--) {
+  for (i = 1; i <= count; i++) {
+    if(map[y_in + dy * i][x_in + dx * i] == player*-1)
     map[y_in + dy * i][x_in + dx * i] *= -1;
   }
   return;
