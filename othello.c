@@ -25,9 +25,11 @@ int main(int argc, char** argv) {
     printf("ファイルが読み込めません");
     return EXIT_FAILURE;
   }
-if(atoi(argv[1])==0){
+if(atoi(argv[2])==0){
   map_reset(map);
+  // board_display(map);
   printf("初期盤面にしました。");
+
   return 0;
 }
   do {
@@ -74,8 +76,8 @@ int read_map_file(const char* fname, /*ファイル名*/
 }
 
 int map_reset(char map[8][8]) {
-  for (int i; i < 8; i++) {
-    for (int j; j < 8; j++) {
+  for (int i=0; i < 8; i++) {
+    for (int j=0; j < 8; j++) {
       map[i][j] = 0;
     }
   }
@@ -100,6 +102,7 @@ int map_save(char map[8][8]) {
   }
   fclose(fp);
   return 0;
+
 }
 
 int othello_game(char map[8][8], double pmap[8][8],
